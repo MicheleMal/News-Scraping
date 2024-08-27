@@ -1,4 +1,4 @@
-export const changeUrlTypeNews = (type: string, index: number) => {
+export const changeUrlTypeNews = (type: string, index: number): string => {
   let url = 'https://www.ansa.it/sicilia/notizie/';
 
   switch (type.toLowerCase()) {
@@ -19,18 +19,18 @@ export const changeUrlTypeNews = (type: string, index: number) => {
 
     case 'cultura':
       return index === 1
-        ? (url += `cultura.shtml`)
-        : (url += `cultura_${index}.shtml`);
+        ? (url += `spettacolo.shtml`)
+        : (url += `spettacolo_${index}.shtml`);
 
     case 'sport':
       return index === 1
         ? (url += `sport.shtml`)
         : (url += `sport_${index}.shtml`);
 
-    case 'viaggi':
-      return index === 1
-        ? (url += `viaggi.shtml`)
-        : (url += `viaggi_${index}.shtml`);
+    // case 'viaggi':
+    //     return index === 1
+    //     ? (url += `viaggi.shtml`)
+    //     : (url += `viaggi_${index}.shtml`);
 
     case 'sanità regionale':
       return index === 1

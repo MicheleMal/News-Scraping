@@ -8,6 +8,12 @@ import { ScrapingModule } from './scraping/scraping.module';
   TODO: Inserire notiize nel database, ogni ora controllare se la notizia è presente nel db altrimenti inserirla
 */
 
+/*
+  1) Scraping notizia sito ansa
+  2) Controllare la categoria della notizia, prendere l'id corrispondente dal database
+  3) Inserire la notiiza nel database tabella news con l'id della categoria corrispondente, solo se non esiste
+*/
+
 @Module({
   imports: [ScrapingModule],
   controllers: [AppController],

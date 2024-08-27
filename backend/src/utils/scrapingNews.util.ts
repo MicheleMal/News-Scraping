@@ -1,23 +1,30 @@
 import puppeteer from 'puppeteer';
 import { changeUrlTypeNews } from './changeUrlTypeNews.util';
 import { parseDate } from './parseDate.util';
+import { RequestTimeoutException } from '@nestjs/common';
 
 export const scraping = async () => {
   try {
     const news = [];
+    const typeNews = [
+      'cronaca',
+      'politica',
+      'economia',
+      'cultura',
+      'sport',
+      'sanità regionale',
+    ]; //? include tipo viaggi se la inserisco nel switch
 
     const browser = await puppeteer.launch({
       // product: "chrome",
       executablePath:
         '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
       headless: false,
-      timeout: 80000,
+      timeout: 90000,
     });
 
-    const page = await browser.newPage();
-
-    for (let i = 1; i <= 10; i++) {
-      const url = changeUrlTypeNews('cronaca', i);
+    const scrapePage = async (url: string) => {
+      const page = await browser.newPage();
 
       await page.goto(url, {
         timeout: 90000,
@@ -61,12 +68,28 @@ export const scraping = async () => {
         date: parseDate(dateArticles[index]),
       }));
 
-      news.push(...articles);
+      await page.close();
+
+      return articles;
+    };
+
+    const nPage = 2;
+    const allPromises = [];
+    for (let i = 1; i <= nPage; i++) {
+      for (let type of typeNews) {
+        const url = changeUrlTypeNews(type, i);
+        allPromises.push(scrapePage(url));
+      }
     }
+
+    const results = await Promise.all(allPromises);
+    results.forEach((article) => news.push(...article));
+
     await browser.close();
 
-    console.log(news);
+    // console.log(news);
+    return news
   } catch (error) {
-    console.log(error);
+    throw new RequestTimeoutException(error.message)
   }
 };
