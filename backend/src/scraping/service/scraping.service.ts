@@ -1,11 +1,152 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, RequestTimeoutException } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model, Types } from 'mongoose';
 import puppeteer from 'puppeteer';
-import { scraping } from 'src/utils/scrapingNews.util';
+import { CategoriesNewsService } from 'src/categories-news/service/categories-news.service';
+import { News } from 'src/schemas/news.schema';
+import { changeUrlTypeNews } from 'src/utils/changeUrlTypeNews.util';
+import { parseDate } from 'src/utils/parseDate.util';
 
 @Injectable()
 export class ScrapingService {
+  constructor(
+    private readonly categoriesNewsService: CategoriesNewsService,
+    @InjectModel(News.name) private readonly newsModel: Model<News>,
+  ) {}
+
   insertArticlesDatabase = async () => {
-    const articles = await scraping();
-    return articles;
+    const articles = await this.scrapingNews();
+    let insertArticles = [];
+
+    for (const article of articles) {
+      const findArticleTitle = await this.newsModel
+        .findOne({ title: article.title })
+        .exec();
+
+      if (!findArticleTitle) {
+        insertArticles.push(
+          await this.newsModel.create({
+            title: article.title,
+            summary: article.summary,
+            date: article.date,
+            id_category: article.id_category,
+          }),
+        );
+      }
+    }
+
+    if(insertArticles.length===0){
+      throw new NotFoundException("Nessuna nuova notizia trovata")
+    }
+
+    // const articles = await this.newsModel.create()
+
+    return insertArticles;
+  };
+
+  getAllNews = async () => {
+    const allNews = await this.newsModel.find().populate("id_category").exec()
+
+    if(allNews.length===0){
+      throw new NotFoundException("Nessuna news caricata")
+    }
+
+    return allNews;
+  };
+
+  scrapingNews = async () => {
+    try {
+      const categories = this.categoriesNewsService.categories;
+
+      const news = [];
+
+      // const typeNews = [
+      //   'cronaca',
+      //   'politica',
+      //   'economia',
+      //   'cultura',
+      //   'sport',
+      //   'sanità regionale',
+      // ]; //? include tipo viaggi se la inserisco nel switch
+
+      const browser = await puppeteer.launch({
+        // product: "chrome",
+        executablePath:
+          '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+        headless: false,
+        timeout: 90000,
+      });
+
+      const scrapePage = async (url: string, idCategory: string) => {
+        const page = await browser.newPage();
+
+        await page.goto(url, {
+          timeout: 90000,
+          waitUntil: 'domcontentloaded',
+        });
+
+        await page.waitForSelector('.articles-list.wide', {
+          timeout: 90000,
+        });
+
+        const titleArticles = await page.$$eval(
+          '.articles-list.wide .article-teaser .article-content .title a',
+          (elements) => {
+            return elements.map(
+              (element: HTMLAnchorElement) => element.innerText,
+            );
+          },
+        );
+
+        const summaryArticles = await page.$$eval(
+          '.articles-list.wide .article-teaser .article-content .summary',
+          (elements) => {
+            return elements.map(
+              (element: HTMLAnchorElement) => element.innerText,
+            );
+          },
+        );
+
+        const dateArticles = await page.$$eval(
+          '.articles-list.wide .article-teaser .article-content .meta .date',
+          (elements) => {
+            return elements.map(
+              (element: HTMLAnchorElement) => element.innerText,
+            );
+          },
+        );
+
+        const articles = titleArticles.map((title, index) => ({
+          title: title,
+          summary: summaryArticles[index],
+          date: parseDate(dateArticles[index]),
+          id_category: idCategory,
+        }));
+
+        await page.close();
+
+        return articles;
+      };
+
+      const nPage = 1;
+      const allPromises = [];
+
+      for (let i = 1; i <= nPage; i++) {
+        categories.forEach((category) => {
+          const url = changeUrlTypeNews(category.type, i);
+          allPromises.push(scrapePage(url, category._id));
+        });
+      }
+
+      const results = await Promise.all(allPromises);
+      results.forEach((article) => news.push(...article));
+
+      await browser.close();
+
+      console.log(news);
+      return news;
+    } catch (error) {
+      throw new RequestTimeoutException(error.message);
+    }
   };
 }

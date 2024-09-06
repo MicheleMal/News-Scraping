@@ -11,4 +11,9 @@ export class ScrapingController {
         return this.scrapingService.insertArticlesDatabase()
     }
 
+    @Get('all-news')
+    getAllNews(){
+        return this.scrapingService.getAllNews()
+    }
+
 }

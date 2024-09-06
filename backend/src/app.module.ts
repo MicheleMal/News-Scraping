@@ -2,20 +2,17 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ScrapingModule } from './scraping/scraping.module';
+import { MongooseModule } from '@nestjs/mongoose';
+import { CategoriesNewsModule } from './categories-news/categories-news.module';
 
 /*
   TODO: Scraping automatico delle notizie ogni ora
-  TODO: Inserire notiize nel database, ogni ora controllare se la notizia è presente nel db altrimenti inserirla
-*/
-
-/*
-  1) Scraping notizia sito ansa
-  2) Controllare la categoria della notizia, prendere l'id corrispondente dal database
-  3) Inserire la notiiza nel database tabella news con l'id della categoria corrispondente, solo se non esiste
 */
 
 @Module({
-  imports: [ScrapingModule],
+  imports: [ScrapingModule,
+    MongooseModule.forRoot("mongodb://localhost:27017/NewsScraping")
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

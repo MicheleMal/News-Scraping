@@ -6,7 +6,8 @@ export const parseDate = (dataString: String): String => {
     const [hour, minutes] = hours.split(":");
 
     const newDate = new Date(
-        Date.UTC(parseInt(year), convertMonthInNumber(month) - 1, parseInt(day), parseInt(hour), parseInt(minutes))
+        // Date.UTC(parseInt(year), convertMonthInNumber(month) - 1, parseInt(day), parseInt(hour), parseInt(minutes))
+       parseInt(year), convertMonthInNumber(month) - 1, parseInt(day), parseInt(hour), parseInt(minutes)
     );
 
     return newDate.toISOString();
