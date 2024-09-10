@@ -1,18 +1,26 @@
-import { Injectable, NotFoundException, RequestTimeoutException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, OnModuleInit, RequestTimeoutException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import { Model } from 'mongoose';
 import puppeteer from 'puppeteer';
 import { CategoriesNewsService } from 'src/categories-news/service/categories-news.service';
 import { News } from 'src/schemas/news.schema';
 import { changeUrlTypeNews } from 'src/utils/changeUrlTypeNews.util';
 import { parseDate } from 'src/utils/parseDate.util';
+import * as cron from "node-cron"
 
 @Injectable()
-export class ScrapingService {
+export class ScrapingService implements OnModuleInit {
+
+  private readonly logger = new Logger(ScrapingService.name)
+
   constructor(
     private readonly categoriesNewsService: CategoriesNewsService,
     @InjectModel(News.name) private readonly newsModel: Model<News>,
   ) {}
+
+  onModuleInit() {
+   this.schedulingScrapingNews()
+  }
 
   insertArticlesDatabase = async () => {
     const articles = await this.scrapingNews();
@@ -36,6 +44,7 @@ export class ScrapingService {
     }
 
     if(insertArticles.length===0){
+      this.logger.debug("Nessuna notizia trovata")
       throw new NotFoundException("Nessuna nuova notizia trovata")
     }
 
@@ -60,20 +69,12 @@ export class ScrapingService {
 
       const news = [];
 
-      // const typeNews = [
-      //   'cronaca',
-      //   'politica',
-      //   'economia',
-      //   'cultura',
-      //   'sport',
-      //   'sanità regionale',
-      // ]; //? include tipo viaggi se la inserisco nel switch
-
       const browser = await puppeteer.launch({
         // product: "chrome",
         executablePath:
           '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
         headless: false,
+        // headless: true,
         timeout: 90000,
       });
 
@@ -144,9 +145,22 @@ export class ScrapingService {
       await browser.close();
 
       console.log(news);
+      this.logger.debug("Caricate nuove news")
       return news;
     } catch (error) {
       throw new RequestTimeoutException(error.message);
     }
   };
+
+  schedulingScrapingNews = () => {
+
+    cron.schedule("0 * * * * ", ()=>{
+        try {
+          this.insertArticlesDatabase()
+        } catch (error) {
+            this.logger.error(`Error: ${error}`)
+        }
+    })
+  }
+
 }
