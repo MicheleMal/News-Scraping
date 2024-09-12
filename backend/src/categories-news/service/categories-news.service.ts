@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Category } from 'src/schemas/category.schema';
@@ -18,10 +18,14 @@ export class CategoriesNewsService {
         return this.categories
     }
  
-    async getIdCategory(typeCategory: string){
-        const idCategory = this.categories.find(category => category.type === typeCategory)._id
+    getIdCategory(typeCategory: string){        
+        const idCategory = this.categories.find(category => category.type === typeCategory)?._id
 
-        console.log(idCategory)
+        if(idCategory === undefined){
+            throw new NotFoundException("Categoria inesistente")
+        }
+
+        return idCategory
     }
 
 }

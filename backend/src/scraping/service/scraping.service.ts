@@ -1,4 +1,11 @@
-import { Injectable, Logger, NotFoundException, OnModuleInit, RequestTimeoutException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+  OnModuleInit,
+  RequestTimeoutException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import puppeteer from 'puppeteer';
@@ -10,8 +17,7 @@ import * as cron from "node-cron"
 
 @Injectable()
 export class ScrapingService implements OnModuleInit {
-
-  private readonly logger = new Logger(ScrapingService.name)
+  private readonly logger = new Logger(ScrapingService.name);
 
   constructor(
     private readonly categoriesNewsService: CategoriesNewsService,
@@ -19,9 +25,10 @@ export class ScrapingService implements OnModuleInit {
   ) {}
 
   onModuleInit() {
-   this.schedulingScrapingNews()
+    this.schedulingScrapingNews();
   }
 
+  // Inserisce le notizie nel database se non esistono
   insertArticlesDatabase = async () => {
     const articles = await this.scrapingNews();
     let insertArticles = [];
@@ -43,9 +50,9 @@ export class ScrapingService implements OnModuleInit {
       }
     }
 
-    if(insertArticles.length===0){
-      this.logger.debug("Nessuna notizia trovata")
-      throw new NotFoundException("Nessuna nuova notizia trovata")
+    if (insertArticles.length === 0) {
+      this.logger.debug('Nessuna notizia trovata');
+      throw new NotFoundException('Nessuna nuova notizia trovata');
     }
 
     // const articles = await this.newsModel.create()
@@ -53,16 +60,88 @@ export class ScrapingService implements OnModuleInit {
     return insertArticles;
   };
 
-  getAllNews = async () => {
-    const allNews = await this.newsModel.find().populate("id_category").exec()
+  // Visualizza tutte le notizie all'iterno del database in ordine decrescente o effettuare la paginazione delle news
+  getAllNews = async (nPage?: number) => {
+    if (!nPage) {
+      const allNews = await this.newsModel
+        .find()
+        .populate('id_category')
+        .sort({
+          date: -1,
+        })
+        .exec();
 
-    if(allNews.length===0){
-      throw new NotFoundException("Nessuna news caricata")
+      if (allNews.length === 0) {
+        throw new NotFoundException('Nessuna news caricata');
+      }
+      return allNews;
     }
 
-    return allNews;
+    const limit = 10;
+    const skip = (nPage - 1) * limit;
+
+    const newsPagination = await this.newsModel
+      .find()
+      .sort({ date: -1 })
+      .skip(skip)
+      .limit(limit)
+      .exec();
+    return newsPagination;
   };
 
+  countPageTotals = async () => {
+    const limit = 10;
+    const lengthNews = (await this.newsModel.find().exec()).length;
+    return Math.ceil(lengthNews / limit);
+  };
+
+  // Filtare le notizie per categoria o data (data inizio - data fine)
+  getNewsFiltered = async (
+    typeCategory?: string,
+    initialDate?: Date,
+    finalDate?: Date,
+  ) => {
+    if (typeCategory) {
+      const id_category = this.categoriesNewsService.getIdCategory(
+        typeCategory.charAt(0).toUpperCase() + typeCategory.slice(1),
+      );
+
+      const newsFilteredCategory = await this.newsModel
+        .find({
+          id_category: id_category,
+        })
+        .exec();
+      return newsFilteredCategory;
+    }
+
+    if (initialDate && finalDate) {
+      if (initialDate > finalDate) {
+        throw new BadRequestException(
+          `La data iniziale (${initialDate}) deve essere inferiore (${finalDate}) a quella finale`,
+        );
+      }
+
+      const newsFilteredDate = await this.newsModel
+        .find({
+          date: {
+            $gte: new Date(initialDate),
+            $lte: new Date(finalDate).setHours(23, 59),
+          },
+        })
+        .sort({ date: -1 })
+        .exec();
+
+      if (newsFilteredDate.length === 0) {
+        throw new NotFoundException(
+          `Nessuna notizia disponibile in queste date: ${initialDate} - ${finalDate}`,
+        );
+      }
+
+      return newsFilteredDate;
+    }
+  };
+
+  // Preleva le notizie dal sito Ansa sicilia
   scrapingNews = async () => {
     try {
       const categories = this.categoriesNewsService.categories;
@@ -145,7 +224,7 @@ export class ScrapingService implements OnModuleInit {
       await browser.close();
 
       console.log(news);
-      this.logger.debug("Caricate nuove news")
+      this.logger.debug('Caricate nuove news');
       return news;
     } catch (error) {
       throw new RequestTimeoutException(error.message);
@@ -153,14 +232,13 @@ export class ScrapingService implements OnModuleInit {
   };
 
   schedulingScrapingNews = () => {
-
-    cron.schedule("0 * * * * ", ()=>{
-        try {
-          this.insertArticlesDatabase()
-        } catch (error) {
-            this.logger.error(`Error: ${error}`)
-        }
-    })
-  }
-
+    // Esecuzione ogni sei ore al minuto 0 di ogni ora
+    cron.schedule('0 */6 * * * ', () => {
+      try {
+        this.insertArticlesDatabase();
+      } catch (error) {
+        this.logger.error(`Error: ${error}`);
+      }
+    });
+  };
 }

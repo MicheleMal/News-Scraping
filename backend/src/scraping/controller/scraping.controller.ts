@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Param, Query } from '@nestjs/common';
 import { ScrapingService } from '../service/scraping.service';
 
 @Controller('scraping')
@@ -12,8 +12,17 @@ export class ScrapingController {
     }
 
     @Get('all-news')
-    getAllNews(){
-        return this.scrapingService.getAllNews()
+    getAllNews(@Query('page') nPage?: number){
+        return this.scrapingService.getAllNews(nPage)
     }
 
+    @Get('news')
+    getNewsFiltered(@Query('t') typeCategory?: string, @Query('dateI') initialDate?: Date, @Query('dateF') finalDate?: Date){
+        return this.scrapingService.getNewsFiltered(typeCategory, initialDate, finalDate)
+    }
+
+    @Get('nPage')
+    returnNPageTotals(){
+        return this.scrapingService.countPageTotals()
+    }
 }
