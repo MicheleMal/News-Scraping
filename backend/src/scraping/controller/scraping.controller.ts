@@ -15,9 +15,4 @@ export class ScrapingController {
     getAllNews(@Query('page') nPage?: number, @Query('t') typeCategory?: string, @Query('dateI') initialDate?: Date, @Query('dateF') finalDate?: Date){
         return this.scrapingService.getNews(nPage, typeCategory, initialDate, finalDate)
     }
-
-    // @Get('nPage')
-    // returnNPageTotals(){
-    //     return this.scrapingService.countPageTotals()
-    // }
 }
