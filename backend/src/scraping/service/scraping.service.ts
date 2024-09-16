@@ -13,7 +13,7 @@ import { CategoriesNewsService } from 'src/categories-news/service/categories-ne
 import { News } from 'src/schemas/news.schema';
 import { changeUrlTypeNews } from 'src/utils/changeUrlTypeNews.util';
 import { parseDate } from 'src/utils/parseDate.util';
-import * as cron from "node-cron"
+import * as cron from 'node-cron';
 
 @Injectable()
 export class ScrapingService implements OnModuleInit {
@@ -44,6 +44,7 @@ export class ScrapingService implements OnModuleInit {
             title: article.title,
             summary: article.summary,
             date: article.date,
+            link: article.link,
             id_category: article.id_category,
           }),
         );
@@ -61,38 +62,76 @@ export class ScrapingService implements OnModuleInit {
   };
 
   // Visualizza tutte le notizie all'iterno del database in ordine decrescente o effettuare la paginazione delle news
-  getAllNews = async (nPage?: number) => {
-    if (!nPage) {
-      const allNews = await this.newsModel
-        .find()
-        .populate('id_category')
-        .sort({
-          date: -1,
-        })
-        .exec();
+  getNews = async (
+    nPage?: number,
+    typeCategory?: string,
+    initialDate?: Date,
+    finalDate?: Date,
+  ) => {
+    const filter: any = {};
 
-      if (allNews.length === 0) {
-        throw new NotFoundException('Nessuna news caricata');
-      }
-      return allNews;
+    // C'è il tipo della categoria
+    if (typeCategory) {
+      const id_category = this.categoriesNewsService.getIdCategory(
+        typeCategory.charAt(0).toUpperCase() + typeCategory.slice(1),
+      );
+
+      filter.id_category = id_category;
     }
 
-    const limit = 10;
-    const skip = (nPage - 1) * limit;
+    // C'è il range di date
+    if (initialDate && finalDate) {
+      if (initialDate > finalDate) {
+        throw new BadRequestException(
+          `La data iniziale (${initialDate}) deve essere inferiore (${finalDate}) a quella finale`,
+        );
+      }
 
-    const newsPagination = await this.newsModel
-      .find()
-      .sort({ date: -1 })
-      .skip(skip)
-      .limit(limit)
+      filter.date = {
+        $gte: new Date(initialDate),
+        $lte: new Date(finalDate).setHours(23, 59),
+      };
+    } else if (initialDate || finalDate) {
+      throw new BadRequestException(
+        'Devi inserire un range di date, quindi data iniziale e finale',
+      );
+    }
+
+    // C'è la paginazione
+    let limit: number = 0;
+    let skip: number;
+
+    if (nPage) {
+      limit = 10;
+      skip = nPage && limit ? (nPage - 1) * limit : 0;
+    }
+
+    const options = {
+      skip: skip,
+      limit: limit,
+      sort: { date: -1 },
+    };
+
+    const news = await this.newsModel
+      .find(filter, null, options)
+      .populate('id_category')
       .exec();
-    return newsPagination;
+    if (news.length === 0) {
+      throw new NotFoundException('Nessuna notizia disponibile');
+    }
+
+    const countPage = this.countPageTotals(news)
+
+    return {
+      news: news,
+      countPage: countPage
+    };
   };
 
-  countPageTotals = async () => {
+  // Restituisce il numero totale di pagine
+  countPageTotals = (news: any) => {
     const limit = 10;
-    const lengthNews = (await this.newsModel.find().exec()).length;
-    return Math.ceil(lengthNews / limit);
+    return Math.ceil(news.length / limit);
   };
 
   // Filtare le notizie per categoria o data (data inizio - data fine)
@@ -101,17 +140,14 @@ export class ScrapingService implements OnModuleInit {
     initialDate?: Date,
     finalDate?: Date,
   ) => {
+    const filter: any = {};
+
     if (typeCategory) {
       const id_category = this.categoriesNewsService.getIdCategory(
         typeCategory.charAt(0).toUpperCase() + typeCategory.slice(1),
       );
 
-      const newsFilteredCategory = await this.newsModel
-        .find({
-          id_category: id_category,
-        })
-        .exec();
-      return newsFilteredCategory;
+      filter.id_category = id_category;
     }
 
     if (initialDate && finalDate) {
@@ -121,24 +157,28 @@ export class ScrapingService implements OnModuleInit {
         );
       }
 
-      const newsFilteredDate = await this.newsModel
-        .find({
-          date: {
-            $gte: new Date(initialDate),
-            $lte: new Date(finalDate).setHours(23, 59),
-          },
-        })
-        .sort({ date: -1 })
-        .exec();
-
-      if (newsFilteredDate.length === 0) {
-        throw new NotFoundException(
-          `Nessuna notizia disponibile in queste date: ${initialDate} - ${finalDate}`,
-        );
-      }
-
-      return newsFilteredDate;
+      filter.date = {
+        $gte: new Date(initialDate),
+        $lte: new Date(finalDate).setHours(23, 59),
+      };
+    } else if (initialDate || finalDate) {
+      throw new BadRequestException(
+        'Devi inserire un rage di date, quindi data iniziale e finale',
+      );
     }
+
+    const newsFiltered = await this.newsModel
+      .find(filter)
+      .sort({ date: -1 })
+      .exec();
+
+    if (newsFiltered.length === 0) {
+      throw new NotFoundException(
+        'Nessuna notizia disponibile per questo filtro',
+      );
+    }
+
+    return newsFiltered;
   };
 
   // Preleva le notizie dal sito Ansa sicilia
@@ -196,10 +236,20 @@ export class ScrapingService implements OnModuleInit {
           },
         );
 
+        const linkArticles = await page.$$eval(
+          '.articles-list.wide .article-teaser .article-content .title a',
+          (elements) => {
+            return elements.map(
+              (element: HTMLAnchorElement) => element.href,
+            );
+          },
+        );
+
         const articles = titleArticles.map((title, index) => ({
           title: title,
           summary: summaryArticles[index],
           date: parseDate(dateArticles[index]),
+          link: linkArticles[index],
           id_category: idCategory,
         }));
 
@@ -233,12 +283,12 @@ export class ScrapingService implements OnModuleInit {
 
   schedulingScrapingNews = () => {
     // Esecuzione ogni sei ore al minuto 0 di ogni ora
-    cron.schedule('0 */6 * * * ', () => {
-      try {
-        this.insertArticlesDatabase();
-      } catch (error) {
-        this.logger.error(`Error: ${error}`);
-      }
-    });
+    // cron.schedule('0 */6 * * * ', () => {
+    //   try {
+    //     this.insertArticlesDatabase();
+    //   } catch (error) {
+    //     this.logger.error(`Error: ${error}`);
+    //   }
+    // });
   };
 }

@@ -16,6 +16,9 @@ export class News {
     @Prop({ type: Date, required: true })
     date: Date;
 
+    @Prop({type: String, required: true})
+    link: string
+
     @Prop({required: false, type: SchemaTypes.ObjectId, ref: Category.name})
     id_category: Types.ObjectId
 }

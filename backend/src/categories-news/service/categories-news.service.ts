@@ -10,12 +10,11 @@ export class CategoriesNewsService {
         @InjectModel(Category.name) private readonly categoryModel: Model<Category>
     ){}
 
-    categories = []
+    categories= []
 
     // Prnede tutte le categorie, li salva in locale
     async loadCategories(){
         this.categories = await this.categoryModel.find().exec()
-        return this.categories
     }
  
     getIdCategory(typeCategory: string){        
@@ -28,4 +27,11 @@ export class CategoriesNewsService {
         return idCategory
     }
 
+    getAllCategories(): any{
+        if(this.categories.length===0){
+            throw new NotFoundException("Nessuna categoria caricata")
+        }
+
+        return this.categories
+    }
 }

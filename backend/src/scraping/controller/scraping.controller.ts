@@ -11,18 +11,13 @@ export class ScrapingController {
         return this.scrapingService.insertArticlesDatabase()
     }
 
-    @Get('all-news')
-    getAllNews(@Query('page') nPage?: number){
-        return this.scrapingService.getAllNews(nPage)
-    }
-
     @Get('news')
-    getNewsFiltered(@Query('t') typeCategory?: string, @Query('dateI') initialDate?: Date, @Query('dateF') finalDate?: Date){
-        return this.scrapingService.getNewsFiltered(typeCategory, initialDate, finalDate)
+    getAllNews(@Query('page') nPage?: number, @Query('t') typeCategory?: string, @Query('dateI') initialDate?: Date, @Query('dateF') finalDate?: Date){
+        return this.scrapingService.getNews(nPage, typeCategory, initialDate, finalDate)
     }
 
-    @Get('nPage')
-    returnNPageTotals(){
-        return this.scrapingService.countPageTotals()
-    }
+    // @Get('nPage')
+    // returnNPageTotals(){
+    //     return this.scrapingService.countPageTotals()
+    // }
 }
