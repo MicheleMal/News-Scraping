@@ -1,7 +1,7 @@
 // src/Home.jsx
 import React from "react";
-import Navbar from "../Navbar/Navbar";
-import NewsList from "../News/NewsList";
+import Navbar from "../components/Navbar";
+import NewsList from "../components/NewsList";
 import useNews from "../hooks/useNews";
 
 const Home = () => {
