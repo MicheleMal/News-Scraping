@@ -61,16 +61,17 @@ export class ScrapingService implements OnModuleInit {
     return insertArticles;
   };
 
-  // Visualizza tutte le notizie all'iterno del database in ordine decrescente o effettuare la paginazione delle news
+  // Visualizza tutte le notizie all'interno del database in ordine decrescente o effettuare la paginazione delle news
   getNews = async (
-    nPage?: number,
+    nPage?: string,
     typeCategory?: string,
     initialDate?: Date,
     finalDate?: Date,
+    nRecentNews?: string
   ) => {
     const filter: any = {};
 
-    // C'è il tipo della categoria
+    // L'utente ha inserito la categoria della news
     if (typeCategory) {
       const id_category = this.categoriesNewsService.getIdCategory(
         typeCategory.charAt(0).toUpperCase() + typeCategory.slice(1),
@@ -79,7 +80,7 @@ export class ScrapingService implements OnModuleInit {
       filter.id_category = id_category;
     }
 
-    // C'è il range di date
+    // L'utente ha inserito il range di date (data inizio - data fine)
     if (initialDate && finalDate) {
       if (initialDate > finalDate) {
         throw new BadRequestException(
@@ -97,15 +98,22 @@ export class ScrapingService implements OnModuleInit {
       );
     }
 
-    // C'è la paginazione
+    // L'utente ha inserito la paginazione (numero della pagine che vuole visitare)
     let limit: number = 0;
     let skip: number;
 
     if (nPage) {
       limit = 10;
-      skip = nPage && limit ? (nPage - 1) * limit : 0;
+      skip = parseInt(nPage) && limit ? (parseInt(nPage) - 1) * limit : 0;
     }
 
+    // L'utente vuole le notizie più recenti, solo se non inserisce il numero di pagina che vuol visitare
+    if(nRecentNews && !nPage){
+      limit = parseInt(nRecentNews)
+    }else if(nRecentNews && nPage){
+      throw new BadRequestException("Inserire solo il numero di news recenti da mostrare")
+    }
+    
     const options = {
       skip: skip,
       limit: limit,
@@ -124,8 +132,8 @@ export class ScrapingService implements OnModuleInit {
 
     return {
       news: news,
-      countPage: countPage
-    };
+      ...(!nPage ? {countPage: countPage} : {})
+    }
   };
 
   // Restituisce il numero totale di pagine
@@ -291,4 +299,7 @@ export class ScrapingService implements OnModuleInit {
     //   }
     // });
   };
+
+
+  
 }

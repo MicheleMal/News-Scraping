@@ -8,6 +8,7 @@ async function bootstrap() {
   const categoryNewsService = app.get(CategoriesNewsService)
   await categoryNewsService.loadCategories()
 
+  app.enableCors()
   await app.listen(3000);
 
 }

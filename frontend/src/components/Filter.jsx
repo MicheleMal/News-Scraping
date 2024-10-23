@@ -1,18 +1,30 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import axios, { all } from "axios";
 
-const Filter = ({onApplyFilters}) => {
-    const categories = [
-        "Cronaca",
-        "Politica",
-        "Economia",
-        "Viaggi",
-    ];
+const Filter = ({ onApplyFilters }) => {
+    const [categories, setCategories] = useState([]);
 
     const [filters, setFilters] = useState({
         category: "",
         initialDate: "",
         finalDate: "",
     });
+
+    const fetchCategories = async () => {
+        try {
+            const allCategory = await axios.get(
+                "http://localhost:3000/categories-news"
+            );
+
+            setCategories(allCategory.data);
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    useEffect(() => {
+        fetchCategories();
+    }, []);
 
     // Gestisce i cambiamenti del select e degli input
     const handleChange = (e) => {
@@ -35,17 +47,17 @@ const Filter = ({onApplyFilters}) => {
         }
     };
 
-    const handleApplyFilters = ()=>{
-        onApplyFilters(filters)
-    }
+    const handleApplyFilters = () => {
+        onApplyFilters(filters);
+    };
 
-    const handleResetFilters = ()=>{
-       setFilters({
-        category: "",
-        initialDate: "",
-        finalDate: ""
-       })
-    }
+    const handleResetFilters = () => {
+        setFilters({
+            category: "",
+            initialDate: "",
+            finalDate: "",
+        });
+    };
 
     return (
         <div className="bg-gray-800 p-6 rounded-lg shadow-lg w-full sm:w-64 mt-6 ml-6">
@@ -60,10 +72,12 @@ const Filter = ({onApplyFilters}) => {
                     value={filters.category}
                     onChange={handleChange}
                 >
-                    <option key="0" value="">Tutte le categorie</option>
-                    {categories.map((category, index) => (
-                        <option key={index} value={category}>
-                            {category}
+                    <option key="0" value="">
+                        Tutte le categorie
+                    </option>
+                    {categories.map((category) => (
+                        <option key={category._id} value={category.type}>
+                            {category.type}
                         </option>
                     ))}
                 </select>
@@ -105,11 +119,17 @@ const Filter = ({onApplyFilters}) => {
             </div>
 
             {/* Button per applicare i filtri */}
-            <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition duration-300" onClick={handleApplyFilters}>
+            <button
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition duration-300"
+                onClick={handleApplyFilters}
+            >
                 Applica Filtri
             </button>
             {/* Button per resettare i filtri */}
-            <button className="w-full bg-red-600 mt-5 hover:bg-red-700 text-white font-semibold py-2 rounded-lg transition duration-300" onClick={handleResetFilters}>
+            <button
+                className="w-full bg-red-600 mt-5 hover:bg-red-700 text-white font-semibold py-2 rounded-lg transition duration-300"
+                onClick={handleResetFilters}
+            >
                 Reset Filtri
             </button>
         </div>

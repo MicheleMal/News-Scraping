@@ -12,7 +12,7 @@ export class ScrapingController {
     }
 
     @Get('news')
-    getAllNews(@Query('page') nPage?: number, @Query('t') typeCategory?: string, @Query('dateI') initialDate?: Date, @Query('dateF') finalDate?: Date){
-        return this.scrapingService.getNews(nPage, typeCategory, initialDate, finalDate)
+    getAllNews(@Query('page') nPage?: string, @Query('t') typeCategory?: string, @Query('dateI') initialDate?: Date, @Query('dateF') finalDate?: Date, @Query('recentN') nRecentNews?: string){
+        return this.scrapingService.getNews(nPage, typeCategory, initialDate, finalDate, nRecentNews)
     }
 }
