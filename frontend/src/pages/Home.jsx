@@ -5,8 +5,8 @@ import NewsList from "../components/NewsList";
 import useNews from "../hooks/useNews";
 
 const Home = () => {
-
-    const newsData = useNews(3)
+    const nRecentNews = 3;
+    const {news, error, loading} = useNews(nRecentNews);
 
     return (
         <>
@@ -23,7 +23,17 @@ const Home = () => {
                 <h2 className="text-2xl font-bold mb-4">Ultime Notizie</h2>
 
                 {/* Container per le card */}
-                <NewsList news={newsData.slice(0,3)}></NewsList>
+                {
+                    loading ? (
+                        <h4>Caricamento delle notizie...</h4>
+                    ): error ? (
+                        <h4>{error}</h4>
+                    ): news.length > 0 ? (
+                        <NewsList news={news}/>
+                    ): (
+                        <h4>{error}</h4>
+                    )
+                }
             </div>
         </>
     );
