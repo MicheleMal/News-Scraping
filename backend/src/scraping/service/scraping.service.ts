@@ -132,7 +132,7 @@ export class ScrapingService implements OnModuleInit {
 
     return {
       news: news,
-      ...(!nPage ? {countPage: countPage} : {})
+      ... (nPage ? {} : {countPage: countPage})
     }
   };
 

@@ -1,10 +1,10 @@
 import React from "react";
 
-const NewsItem = ({ key, title, summary, date, link }) => {
+const NewsItem = ({ id, title, summary, date, link, category }) => {
     return (
         <>
             <div
-                key={key}
+                key={id}
                 className="bg-gray-800 rounded-lg p-6 shadow-lg transform transition-transform hover:-translate-y-2 hover:shadow-2xl"
             >
                 {/* Titolo della notizia */}
@@ -13,10 +13,13 @@ const NewsItem = ({ key, title, summary, date, link }) => {
                 </h3>
 
                 {/* Data */}
-                <p className="text-gray-400 text-sm mb-4">{date}</p>
+                <p className="text-gray-400 text-sm mb-4">{new Date(date).toLocaleString()}</p>
 
                 {/* Descrizione */}
                 <p className="text-gray-400 mb-4">{summary}</p>
+
+                {/* Categoria notizia */}
+                <p className="text-gray-400 mb-4">{category}</p>
 
                 {/* Link alla notizia */}
                 <a

@@ -51,12 +51,17 @@ const Filter = ({ onApplyFilters }) => {
         onApplyFilters(filters);
     };
 
+    // Reset dei vari campi filtri
     const handleResetFilters = () => {
-        setFilters({
+        const resetFilters = {
             category: "",
             initialDate: "",
             finalDate: "",
-        });
+        }
+        setFilters(resetFilters)
+
+        onApplyFilters(resetFilters)
+
     };
 
     return (

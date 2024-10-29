@@ -4,13 +4,15 @@ import NewsItem from "./NewsItem";
 const NewsList = ({ news }) => {
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {news.map((news, index) => (
+            {news.map((newsItem) => (                
                 <NewsItem
-                    key={index}
-                    title={news.title}
-                    summary={news.content}
-                    date={news.date}
-                    link={news.link}
+                    key={newsItem._id}
+                    // key={index}
+                    title={newsItem.title}
+                    summary={newsItem.summary}
+                    date={newsItem.date}
+                    link={newsItem.link}
+                    category={newsItem.id_category.type}
                 />
             ))}
         </div>
