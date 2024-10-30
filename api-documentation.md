@@ -136,6 +136,8 @@ Le varie API servono per inserire, visualizzare, filtrare e paginare le notizie 
     -   `t`: Filtro per tipo di categoria (es. Cronaca, Politica)
     -   `dateI`: Data inizio range (es. 2024-03-01)
     -   `dateF`: Data fine range (es. 2024-03-20)
+    -   `page`: Numero pagina
+    -   `recentN`: numero per mostrare le ultime n notizie recenti
 -   **Esempio di utilizzo**:
     ```http
     GET /scraping/news?t=Cronaca
