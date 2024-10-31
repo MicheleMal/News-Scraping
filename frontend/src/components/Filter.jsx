@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios, { all } from "axios";
+import axios from "axios";
 
 const Filter = ({ onApplyFilters }) => {
     const [categories, setCategories] = useState([]);
@@ -57,11 +57,10 @@ const Filter = ({ onApplyFilters }) => {
             category: "",
             initialDate: "",
             finalDate: "",
-        }
-        setFilters(resetFilters)
+        };
+        setFilters(resetFilters);
 
-        onApplyFilters(resetFilters)
-
+        onApplyFilters(resetFilters);
     };
 
     return (

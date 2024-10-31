@@ -2,7 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
+/* body {
     @apply bg-gray-900 text-gray-300;
-  }
+  } */
   
+body {
+  @apply bg-slate-900 text-gray-300
+}

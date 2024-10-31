@@ -1,33 +1,59 @@
-// src/Navbar.jsx
+// Navbar.js
 import React from "react";
-import { Link, NavLink } from "react-router-dom";
+import { AppBar, Toolbar, Typography, Button } from "@mui/material";
+import { NavLink } from "react-router-dom";
+import { HomeIcon, NewspaperIcon } from "lucide-react";
 
 const Navbar = () => {
     return (
-        <nav className="bg-gray-800 p-4">
-            <div className="container mx-auto flex justify-between items-center">
-                <h1 className="text-white text-2xl font-bold">News Scraping</h1>
-                <div className="space-x-4">
-                    <NavLink
-                        to={"/"}
-                        className={({ isActive }) =>
-                            isActive ? "text-blue-400 hover:text-blue-600" : "text-gray-300 hover:text-white"
-                        }
+        <AppBar position="static" sx={{ backgroundColor: "#212121" }}>
+            <Toolbar>
+                <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+                    News Scraping
+                </Typography>
+
+                {/* Utilizza NavLink per la navigazione */}
+                <NavLink
+                    to="/"
+                    style={({ isActive }) => ({
+                        textDecoration: "none",
+                        color: isActive ? "#bbbdbb" : "white" // Cambia il colore del testo
+                    })} 
+                >
+                    <Button
+                        color="inherit"
+                        sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            "&:hover": { backgroundColor: "#424242" },
+                        }}
                     >
-                        Home
-                    </NavLink>
-                    <NavLink
-                        to={"/news"}
-                        // className="text-gray-300 hover:text-white"
-                        className={({ isActive }) =>
-                            isActive ? "text-blue-400 hover:text-blue-600" : "text-gray-300 hover:text-white"
-                        }
+                        <HomeIcon size={24} color="white" />
+                        <span style={{ marginLeft: "8px" }}>Home</span>
+                    </Button>
+                </NavLink>
+
+                <NavLink
+                    to="/news"
+                    style={({ isActive }) => ({
+                        textDecoration: "none",
+                        color: isActive ? "#bbbdbb" : "white" // Cambia il colore del testo
+                    })} 
+                >
+                    <Button
+                        color="inherit"
+                        sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            "&:hover": { backgroundColor: "#424242" },
+                        }}
                     >
-                        News
-                    </NavLink>
-                </div>
-            </div>
-        </nav>
+                        <NewspaperIcon size={24} color="white" />
+                        <span style={{ marginLeft: "8px" }}>News</span>
+                    </Button>
+                </NavLink>
+            </Toolbar>
+        </AppBar>
     );
 };
 

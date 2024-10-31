@@ -1,6 +1,6 @@
 import React from "react";
 
-const Pagination = ({ currentPage, totalPages, onPageChange}) => {
+const Pagination = ({ currentPage, totalPages, onPageChange }) => {
     const pageNumbers = [];
 
     // Calcola i numeri di pagina
