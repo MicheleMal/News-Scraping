@@ -14,6 +14,7 @@ export default function Component({
     summary,
     date,
     link,
+    image,
     category,
 }) {
     return (
@@ -31,7 +32,7 @@ export default function Component({
             {/* Immagine */}
             <CardMedia
                 component="img"
-                image="https://images.unsplash.com/photo-1523995462485-3d171b5c8fa9?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8bmV3c3xlbnwwfHwwfHx8MA%3D%3D"
+                image={image}
                 alt="Immagine notizia"
                 sx={{
                     width: "100%",

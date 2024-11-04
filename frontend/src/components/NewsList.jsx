@@ -13,6 +13,7 @@ const NewsList = ({ news }) => {
                         summary={newsItem.summary}
                         date={newsItem.date}
                         link={newsItem.link}
+                        image={newsItem.image}
                         category={newsItem.id_category.type}
                     />
                 ))}

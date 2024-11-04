@@ -45,6 +45,7 @@ export class ScrapingService implements OnModuleInit {
             summary: article.summary,
             date: article.date,
             link: article.link,
+            image: article.image,
             id_category: article.id_category,
           }),
         );
@@ -67,7 +68,7 @@ export class ScrapingService implements OnModuleInit {
     typeCategory?: string,
     initialDate?: Date,
     finalDate?: Date,
-    nRecentNews?: string
+    nRecentNews?: string,
   ) => {
     const filter: any = {};
 
@@ -108,12 +109,14 @@ export class ScrapingService implements OnModuleInit {
     }
 
     // L'utente vuole le notizie più recenti, solo se non inserisce il numero di pagina che vuol visitare
-    if(nRecentNews && !nPage){
-      limit = parseInt(nRecentNews)
-    }else if(nRecentNews && nPage){
-      throw new BadRequestException("Inserire solo il numero di news recenti da mostrare")
+    if (nRecentNews && !nPage) {
+      limit = parseInt(nRecentNews);
+    } else if (nRecentNews && nPage) {
+      throw new BadRequestException(
+        'Inserire solo il numero di news recenti da mostrare',
+      );
     }
-    
+
     const options = {
       skip: skip,
       limit: limit,
@@ -128,12 +131,12 @@ export class ScrapingService implements OnModuleInit {
       throw new NotFoundException('Nessuna notizia disponibile');
     }
 
-    const countPage = this.countPageTotals(news)
+    const countPage = this.countPageTotals(news);
 
     return {
       news: news,
-      ... (nPage ? {} : {countPage: countPage})
-    }
+      ...(nPage ? {} : { countPage: countPage }),
+    };
   };
 
   // Restituisce il numero totale di pagine
@@ -247,9 +250,14 @@ export class ScrapingService implements OnModuleInit {
         const linkArticles = await page.$$eval(
           '.articles-list.wide .article-teaser .article-content .title a',
           (elements) => {
-            return elements.map(
-              (element: HTMLAnchorElement) => element.href,
-            );
+            return elements.map((element: HTMLAnchorElement) => element.href);
+          },
+        );
+
+        const imgArticles = await page.$$eval(
+          '.articles-list.wide .article-teaser .article-image a picture img',
+          (elements) => {
+            return elements.map((element: HTMLImageElement) => element.src);
           },
         );
 
@@ -258,6 +266,7 @@ export class ScrapingService implements OnModuleInit {
           summary: summaryArticles[index],
           date: parseDate(dateArticles[index]),
           link: linkArticles[index],
+          image: imgArticles[index],
           id_category: idCategory,
         }));
 
@@ -299,7 +308,4 @@ export class ScrapingService implements OnModuleInit {
     //   }
     // });
   };
-
-
-  
 }

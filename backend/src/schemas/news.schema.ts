@@ -19,6 +19,9 @@ export class News {
     @Prop({type: String, required: true})
     link: string
 
+    @Prop({type: String, required: false})
+    image: string
+
     @Prop({required: false, type: SchemaTypes.ObjectId, ref: Category.name})
     id_category: Types.ObjectId
 }
