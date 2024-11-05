@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
-const Filter = ({ onApplyFilters }) => {
+const Filter = ({ onApplyFilters, onUpdateNews }) => {
     const [categories, setCategories] = useState([]);
 
     const [filters, setFilters] = useState({
